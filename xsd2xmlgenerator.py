@@ -22,6 +22,10 @@ def get_value_for_attribute(node_type):
             return str(random.randrange(100, 10000))
 
 
+def get_random_value():
+    return int(random.randrange(2, 10))
+
+
 class Xsd2XmlGenerator:
 
     def __init__(self, xsd_path):
@@ -44,13 +48,18 @@ class Xsd2XmlGenerator:
         # complex types
         else:
             group = xsd_node.type.content._group
-
             for sub_node in group:
-                if hasattr(sub_node, '_group'):
-                    for item_node in sub_node._group:
-                        self._recur_func(item_node, xml_node)
-                    continue
-                self._recur_func(sub_node, xml_node)
+                if sub_node.occurs[1] is None:
+                    i = get_random_value()
+                else:
+                    i = 1
+                while i != 0:
+                    i -= 1
+                    if hasattr(sub_node, '_group'):
+                        for item_node in sub_node._group:
+                            self._recur_func(item_node, xml_node)
+                        continue
+                    self._recur_func(sub_node, xml_node)
 
         # attributes
         for attr, attr_obj in xsd_node.attributes.items():
@@ -59,3 +68,8 @@ class Xsd2XmlGenerator:
     def write(self, xml_path) -> None:
         tree = ElementTree.ElementTree(self.root)
         tree.write(xml_path, encoding="utf-8", xml_declaration=True)
+        print("Generate " + xml_path + " \nDone!!!")
+
+    def validate(self, xml_path):
+        self.schema.validate(xml_path)
+        print(xml_path + " validates = " + str(self.schema.is_valid(xml_path)))
